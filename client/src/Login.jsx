@@ -18,6 +18,7 @@ function Login() {
     if (email === 'admin@gmail.com' && password === 'admin123') {
       localStorage.setItem('userToken', 'admin-token')
       localStorage.setItem('userRole', 'admin')
+      localStorage.setItem('userEmail', 'admin@gmail.com')
       navigate('/admin')
       setIsLoading(false)
       return
@@ -29,6 +30,20 @@ function Login() {
         if (result.data === "Success") {
           localStorage.setItem('userToken', 'user-token')
           localStorage.setItem('userRole', 'user')
+          localStorage.setItem('userEmail', email)
+          
+          // Save user to localStorage for admin dashboard if not already saved
+          const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
+          if (!existingUsers.some(user => user.email === email)) {
+            existingUsers.push({
+              name: email.split('@')[0], // Use email prefix as name if not available
+              email,
+              phone: '',
+              registrationDate: new Date().toISOString()
+            })
+            localStorage.setItem('registeredUsers', JSON.stringify(existingUsers))
+          }
+          
           navigate('/home')
         } else {
           setError(result.data)
@@ -95,6 +110,7 @@ function Login() {
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
 
+    
 
           <div style={styles.links}>
             <Link to="/forgot-password" style={styles.link}>Forgot Password?</Link>

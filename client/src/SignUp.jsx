@@ -38,6 +38,21 @@ function SignUp() {
       phone 
     })
       .then(result => {
+        // Save user to localStorage for admin dashboard
+        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
+        const newUser = {
+          name,
+          email,
+          phone: phone || '',
+          registrationDate: new Date().toISOString()
+        }
+        
+        // Check if user already exists
+        if (!existingUsers.some(user => user.email === email)) {
+          existingUsers.push(newUser)
+          localStorage.setItem('registeredUsers', JSON.stringify(existingUsers))
+        }
+        
         setSuccess("Registration successful! Redirecting to login...")
         setTimeout(() => {
           navigate('/login')

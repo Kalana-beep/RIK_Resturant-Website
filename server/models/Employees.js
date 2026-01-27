@@ -32,8 +32,8 @@ const employeeSchema = new mongoose.Schema({
     }
 });
 
-// Index for email
-employeeSchema.index({ email: 1 }, { unique: true });
+// REMOVED THE DUPLICATE INDEX LINE - email already has unique: true above
+// employeeSchema.index({ email: 1 }, { unique: true });
 
 const EmployeeModel = mongoose.model('Employee', employeeSchema);
 

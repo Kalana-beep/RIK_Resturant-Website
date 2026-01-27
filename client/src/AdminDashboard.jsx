@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -50,7 +51,7 @@ export default function AdminDashboard() {
   }, [])
 
   const loadAllData = () => {
-    // Load users
+    // Load users from localStorage
     const savedUsers = JSON.parse(localStorage.getItem('registeredUsers')) || []
     setUsers(savedUsers)
     
@@ -78,13 +79,18 @@ export default function AdminDashboard() {
     
     // Calculate stats
     const revenue = orderData.reduce((total, order) => total + order.total, 0)
+    
+    // Get unread messages count
+    const messages = JSON.parse(localStorage.getItem('contactInquiries')) || []
+    const unreadCount = messages.filter(msg => msg.status === 'unread').length
+    
     setStats({
       totalUsers: savedUsers.length,
       totalBookings: bookings.length,
       totalOrders: orderData.length,
       totalRevenue: revenue,
-      unreadMessages: contactMessages.filter(msg => msg.status === 'unread').length,
-      totalMessages: contactMessages.length
+      unreadMessages: unreadCount,
+      totalMessages: messages.length
     })
   }
 
@@ -189,15 +195,44 @@ export default function AdminDashboard() {
 
   const deleteUser = (userEmail) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      const updatedUsers = users.filter(user => user.email !== userEmail)
-      setUsers(updatedUsers)
+      // Remove from localStorage users array
+      const savedUsers = JSON.parse(localStorage.getItem('registeredUsers')) || []
+      const updatedUsers = savedUsers.filter(user => user.email !== userEmail)
       localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+      
+      // Update state
+      setUsers(updatedUsers)
       
       // Also delete user's cart
       localStorage.removeItem(`cart_${userEmail}`)
       
-      loadAllData()
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        totalUsers: updatedUsers.length
+      }))
+      
       alert('User deleted successfully!')
+    }
+  }
+
+  const deleteOrder = (orderId) => {
+    if (window.confirm('Are you sure you want to delete this order?')) {
+      const updatedOrders = orders.filter(order => order.id !== orderId)
+      setOrders(updatedOrders)
+      localStorage.setItem('orders', JSON.stringify(updatedOrders))
+      
+      // Recalculate revenue
+      const revenue = updatedOrders.reduce((total, order) => total + order.total, 0)
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        totalOrders: updatedOrders.length,
+        totalRevenue: revenue
+      }))
+      
+      alert('Order deleted successfully!')
     }
   }
 
@@ -795,7 +830,7 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Orders Section */}
+            {/* Orders Section - FIXED WITH DELETE BUTTON */}
             {activeSection === 'orders' && (
               <div className="card">
                 <div className="card-header">
@@ -821,6 +856,7 @@ export default function AdminDashboard() {
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th>Status Update</th>
                             <th>Actions</th>
                           </tr>
                         </thead>
@@ -852,6 +888,14 @@ export default function AdminDashboard() {
                                   <option value="completed">Completed</option>
                                   <option value="cancelled">Cancelled</option>
                                 </select>
+                              </td>
+                              <td>
+                                <button 
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => deleteOrder(order.id)}
+                                >
+                                  <i className="bi bi-trash"></i>
+                                </button>
                               </td>
                             </tr>
                           ))}
