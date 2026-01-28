@@ -10,7 +10,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-mongoose.connect('mongodb://127.0.0.1:27017/rik_restaurant')
+mongoose.connect('mongodb+srv://kalanal627_db_user:kalana123@kalana.x35in5j.mongodb.net/RIK_Restaurant_DB')
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.log('MongoDB connection error:', err));
 
